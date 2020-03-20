@@ -25,8 +25,120 @@
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
+				<section>
+					<h3>Do You Really Need to Run Your Firmware on the Device?</h3>
+				</section>
+
+				<section>
+					<h3>Embedded Rust Way</h3>
+					<ul>
+						<li style="background-color: #004963;">Debugger/launcher</li>
+						<li style="background-color: #12570c;">Probe<br/>
+							<span style="font-size: 60%">ST-LINK, JLink, DAPLink, ...</span></li>
+						<li style="background-color: #8a5700;">Application code</li>
+						<li style="background-color: #8a5700;">External device drivers and libs<br/>
+							<small>bme280, embedded-graphics, ...</small>
+						</li>
+						<li style="background-color: #8a5700;">Hardware abstraction layer<br/>
+							<small>stm32f0xx-hal</small>
+						</li>
+						<li style="background-color: #8a5700;">Peripheral access crate<br/>
+							<small>stm32f0</small>
+						</li>
+						<li style="background-color: #8a5700;">Memory access<br/>
+							<small>vcell</small>
+						</li>
+					</ul>
+				</section>
+
+				<section>
+					<h3>The Idea</h3>
+					<ul>
+						<li style="background-color: #004963;">Application code</li>
+						<li style="background-color: #004963;">External device drivers and libs<br/>
+							<small>bme280, embedded-graphics, ...</small>
+						</li>
+						<li style="background-color: #004963;">Hardware abstraction layer<br/>
+							<small>stm32f0xx-hal</small>
+						</li>
+						<li style="background-color: #004963;">Peripheral access crate<br/>
+							<small>stm32f0</small>
+						</li>
+						<li style="background-color: #004963;">Memory access<br/>
+							<small>vcell</small>
+						</li>
+						<li style="background-color: #004963;">Probe interface<br/>
+							<small>probe-rs</small>
+						</li>
+						<li style="background-color: #12570c;">Probe<br/>
+							<span style="font-size: 60%">ST-LINK, JLink, DAPLink, ...</span></li>
+						<li style="background-color: #8a5700;">Device (empty firmware)</li>
+					</ul>
+				</section>
+
+				<section>
+					<h3>What do we get?</h3>
+					<ul>
+						<li>OS fancies: logging, files, network</li>
+						<li>Great for prototyping</li>
+						<li>Great for writing external device drivers</li>
+						<li>Instant run, no flashing</li>
+						<li>Quite good connection speed</li>
+					</ul>
+				</section>
+
+				<section>
+					<h3><a href="https://github.com/Disasm/avatar-rs/blob/master/avatar-cli/examples/blinky.rs">Example</a></h3>
+					<pre><code class="hljs" style="max-height: 600px" data-trim data-noescape data-line-numbers="">
+vcell::set_memory_interface(open_probe());
+
+let mut dp = unsafe { stm32::Peripherals::steal() };
+let mut rcc = dp.RCC.configure().freeze(&mut dp.FLASH);
+let gpiob = dp.GPIOB.split(&mut rcc);
+
+let mut led = interrupt::free(|cs| {
+    gpiob.pb3.into_push_pull_output(cs)
+});
+
+loop {
+    led.set_high().ok();
+    thread::sleep(Duration::from_millis(500));
+    led.set_low().ok();
+    thread::sleep(Duration::from_millis(500));
+}
+					</code></pre>
+				</section>
+
+				<section>
+					<h3>Hacks required</h3>
+					<ul>
+						<li>vcell: add set_memory_interface(), VolatileCell32</li>
+						<li>redirect all the memory accesses to probe-rs</li>
+						<li>pac: change Reg to use VolatileCell32</li>
+						<li>hal: change `serial` and `spi` to use vcell</li>
+						<li>application: use Peripheral::steal() instead of take()</li>
+					</ul>
+				</section>
+
+				<section>
+					<h3>Limitations</h3>
+					<ul>
+						<li>No interrupts and DMA</li>
+						<li>ptr::read_volatile, write_volatile are not supported</li>
+						<li>interrupt::free blocks are not supported (yet)</li>
+					</ul>
+				</section>
+
+				<section>
+					<h3>Try it!</h3>
+					<a href="https://github.com/Disasm/avatar-rs">https://github.com/Disasm/avatar-rs</a><br/>
+					Examples for the NUCLEO-F042K6 board<br/>
+					<br/>
+					Ask your questions on Matrix!
+					<br/><br/><br/>
+					Inspired by <a href="http://s3.eurecom.fr/docs/bar18_muench.pdf">Avatar²: A Multi-target Orchestration Platform</a><br/>
+					and <a href="https://probe.rs/">probe-rs</a>
+				</section>
 			</div>
 		</div>
 
@@ -37,7 +149,11 @@
 			// - https://github.com/hakimel/reveal.js#configuration
 			// - https://github.com/hakimel/reveal.js#dependencies
 			Reveal.initialize({
+				width: 1080,
+				height: 900,
+				controls: false,
 				hash: true,
+				transition: 'none',
 				dependencies: [
 					{ src: 'plugin/markdown/marked.js' },
 					{ src: 'plugin/markdown/markdown.js' },
