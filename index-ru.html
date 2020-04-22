@@ -26,72 +26,72 @@
 		<div class="reveal">
 			<div class="slides">
 				<section>
-					<h3>Do You Really Need to Run Your Firmware on the Device?</h3>
+					<h3>Так ли надо запускать прошивку на устройстве?</h3>
 				</section>
 
 				<section>
 					<h3>Embedded Rust Way</h3>
 					<ul>
-						<li style="background-color: #004963;">Debugger/launcher</li>
-						<li style="background-color: #12570c;">Probe<br/>
+						<li style="background-color: #004963;">Программный отладчик</li>
+						<li style="background-color: #12570c;">Аппаратный отладчик (probe)<br/>
 							<span style="font-size: 60%">ST-LINK, JLink, DAPLink, ...</span></li>
-						<li style="background-color: #8a5700;">Application code</li>
-						<li style="background-color: #8a5700;">External device drivers and libs<br/>
+						<li style="background-color: #8a5700;">Код прошивки</li>
+						<li style="background-color: #8a5700;">Внешние драйверы и библиотеки<br/>
 							<small>bme280, embedded-graphics, ...</small>
 						</li>
-						<li style="background-color: #8a5700;">Hardware abstraction layer<br/>
+						<li style="background-color: #8a5700;">Слой аппаратных абстракций (HAL)<br/>
 							<small>stm32f0xx-hal</small>
 						</li>
-						<li style="background-color: #8a5700;">Peripheral access crate<br/>
+						<li style="background-color: #8a5700;">Слой доступа к периферии (PAC/PAL)<br/>
 							<small>stm32f0</small>
 						</li>
-						<li style="background-color: #8a5700;">Memory access<br/>
+						<li style="background-color: #8a5700;">Доступ к памяти<br/>
 							<small>vcell</small>
 						</li>
 					</ul>
 				</section>
 
 				<section>
-					<h3>The Idea</h3>
+					<h3>Идея</h3>
 					<ul>
-						<li style="background-color: #004963;">Application code</li>
-						<li style="background-color: #004963;">External device drivers and libs<br/>
+						<li style="background-color: #004963;">Код прошивки</li>
+						<li style="background-color: #004963;">Внешние драйверы и библиотеки<br/>
 							<small>bme280, embedded-graphics, ...</small>
 						</li>
-						<li style="background-color: #004963;">Hardware abstraction layer<br/>
+						<li style="background-color: #004963;">Слой аппаратных абстракций (HAL)<br/>
 							<small>stm32f0xx-hal</small>
 						</li>
-						<li style="background-color: #004963;">Peripheral access crate<br/>
+						<li style="background-color: #004963;">Слой доступа к периферии (PAC/PAL)<br/>
 							<small>stm32f0</small>
 						</li>
-						<li style="background-color: #004963;">Memory access<br/>
+						<li style="background-color: #004963;">Доступ к памяти<br/>
 							<small>vcell (modified)</small>
 						</li>
-						<li style="background-color: #004963;">Probe interface<br/>
+						<li style="background-color: #004963;">Интерфейс аппаратного отладчика<br/>
 							<small>probe-rs</small>
 						</li>
-						<li style="background-color: #12570c;">Probe<br/>
+						<li style="background-color: #12570c;">Аппаратный отладчик<br/>
 							<span style="font-size: 60%">ST-LINK, JLink, DAPLink, ...</span></li>
-						<li style="background-color: #8a5700;">Device (empty firmware)</li>
+						<li style="background-color: #8a5700;">Устройство (без прошивки)</li>
 					</ul>
 				</section>
 
 				<section>
-					<h3>What do we get?</h3>
+					<h3>Что мы получим?</h3>
 					<ul>
-						<li>OS fancies: logging, files, network</li>
-						<li>Instant run, no flashing</li>
-						<li>Higher CPU frequency</li>
-						<li>Quite good connection speed<br/>
-							<small>~380 us per request, ~2600 requests per second on ST-LINK/V2.1</small>
+						<li>Плюшки ОС: логи, файлы, сеть</li>
+						<li>Мгновенный запуск без прошивки</li>
+						<li>Выше частота процессора</li>
+						<li>Довольно неплохая скорость соединения<br/>
+							<small>~380 мкс на обращение, ~2600 обращений в секунду на ST-LINK/V2.1</small>
 						</li>
-						<li>Great for prototyping</li>
-						<li>Great for writing external device drivers</li>
+						<li>Отлично подходит для прототипирования</li>
+						<li>Отлично подходит для реализации драйверов внешних устройств</li>
 					</ul>
 				</section>
 
 				<section>
-					<h3><a href="https://github.com/Disasm/avatar-rs/blob/master/avatar-cli/examples/blinky.rs">Example</a></h3>
+					<h3><a href="https://github.com/Disasm/avatar-rs/blob/master/avatar-cli/examples/blinky.rs">Пример</a></h3>
 					<pre><code class="hljs" style="max-height: 600px" data-trim data-noescape data-line-numbers="">
 vcell::set_memory_interface(open_probe());
 
@@ -113,35 +113,32 @@ loop {
 				</section>
 
 				<section>
-					<h3>Hacks required</h3>
+					<h3>Хаки</h3>
 					<ul>
-						<li>vcell: add set_memory_interface(), VolatileCell32</li>
-						<li>redirect all the memory accesses to probe-rs</li>
-						<li>pac: change Reg to use VolatileCell32</li>
-						<li>hal: change `serial` and `spi` to use vcell</li>
-						<li>application: use Peripheral::steal() instead of take()</li>
+						<li>vcell: новая функция set_memory_interface()</li>
+						<li>vcell: обращения к памяти перенаправлены в probe-rs</li>
+						<li>hal: `serial` и `spi` должны использовать vcell</li>
+						<li>прошивка: Peripheral::steal() вместо take()</li>
 					</ul>
 				</section>
 
 				<section>
-					<h3>Limitations</h3>
+					<h3>Ограничения</h3>
 					<ul>
-						<li>No interrupts and DMA</li>
-						<li>ptr::read_volatile, write_volatile are not supported</li>
-						<li>interrupt::free blocks are not supported (yet)</li>
-						<li>No 8-bit access at the moment (soon&trade;)</li>
+						<li>Прерывания и DMA не поддерживаются</li>
+						<li>ptr::read_volatile, write_volatile не поддерживаются</li>
+						<li>interrupt::free блоки не поддерживаются (пока)</li>
 					</ul>
 				</section>
 
 				<section>
 					<h3>Try it!</h3>
 					<a href="https://github.com/Disasm/avatar-rs">https://github.com/Disasm/avatar-rs</a><br/>
-					Examples for the NUCLEO-F042K6 board<br/>
-					<br/>
-					Ask your questions on Matrix!
-					<br/><br/><br/>
-					Inspired by <a href="http://s3.eurecom.fr/docs/bar18_muench.pdf">Avatar²: A Multi-target Orchestration Platform</a><br/>
-					and <a href="https://probe.rs/">probe-rs</a>
+					Примеры для платы NUCLEO-F042K6<br/>
+					Руководство по портированию на другие семейства МК<br/>
+					<br/><br/>
+					Идея из <a href="http://s3.eurecom.fr/docs/bar18_muench.pdf">Avatar²: A Multi-target Orchestration Platform</a><br/>
+					Реализовано благодаря <a href="https://probe.rs/">probe-rs</a>
 				</section>
 			</div>
 		</div>
