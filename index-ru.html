@@ -91,11 +91,11 @@
 				</section>
 
 				<section>
-					<h3><a href="https://github.com/Disasm/avatar-rs/blob/master/avatar-cli/examples/blinky.rs">Пример</a></h3>
+					<h3><a href="https://github.com/Disasm/avatar-rs/blob/master/examples-nucleo-f042k6/examples/blinky.rs">Пример</a></h3>
 					<pre><code class="hljs" style="max-height: 600px" data-trim data-noescape data-line-numbers="">
 vcell::set_memory_interface(open_probe());
 
-let mut dp = unsafe { stm32::Peripherals::steal() };
+let mut dp = stm32::Peripherals::take().unwrap();
 let mut rcc = dp.RCC.configure().freeze(&mut dp.FLASH);
 let gpiob = dp.GPIOB.split(&mut rcc);
 
@@ -118,7 +118,6 @@ loop {
 						<li>vcell: новая функция set_memory_interface()</li>
 						<li>vcell: обращения к памяти перенаправлены в probe-rs</li>
 						<li>hal: `serial` и `spi` должны использовать vcell</li>
-						<li>прошивка: Peripheral::steal() вместо take()</li>
 					</ul>
 				</section>
 
@@ -127,7 +126,6 @@ loop {
 					<ul>
 						<li>Прерывания и DMA не поддерживаются</li>
 						<li>ptr::read_volatile, write_volatile не поддерживаются</li>
-						<li>interrupt::free блоки не поддерживаются (пока)</li>
 					</ul>
 				</section>
 
